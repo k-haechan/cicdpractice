@@ -26,4 +26,8 @@ public class MainController {
 	public String info() {
 		return "This is a simple Spring Boot application for CI/CD practice.";
 	}
+	@GetMapping("/greet")
+	public String greet() {
+		return "Greetings from the CI/CD practice application!";
+	}
 }
