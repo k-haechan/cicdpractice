@@ -166,18 +166,7 @@ jobs:
             aws ssm send-command \
               --instance-ids "$ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters "$(cat <<EOF
-              {
-                "commands": [
-                  "docker pull ghcr.io/${{ env.OWNER_LC }}/${{ env.DOCKER_IMAGE_NAME }}:latest",
-                  "docker stop app1 || true",
-                  "docker rm app1 || true",
-                  "docker run -d --network common --name app1 -p 8080:8080 ghcr.io/${{ env.OWNER_LC }}/${{ env.DOCKER_IMAGE_NAME }}:latest",
-                  "docker rmi \$(docker images -f 'dangling=true' -q)"
-                ]
-              }
-              EOF
-              )" \
+              --parameters '{"commands":["docker pull ghcr.io/${{ env.OWNER_LC }}/${{ env.DOCKER_IMAGE_NAME }}:latest","docker stop app1 || true","docker rm app1 || true","docker run -d --network common --name app1 -p 8080:8080 ghcr.io/${{ env.OWNER_LC }}/${{ env.DOCKER_IMAGE_NAME }}:latest","docker rmi $(docker images -f '\''dangling=true'\'' -q)"]}' \
               --comment "Deploy app" \
               --region ap-northeast-2
-              done
+          done
