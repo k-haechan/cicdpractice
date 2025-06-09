@@ -21,4 +21,9 @@ public class MainController {
 	public String status() {
 		return "Service is runni";
 	}
+
+	@GetMapping("/info")
+	public String info() {
+		return "This is a simple Spring Boot application for CI/CD practice.";
+	}
 }
