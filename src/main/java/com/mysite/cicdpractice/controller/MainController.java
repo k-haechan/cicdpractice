@@ -9,4 +9,8 @@ public class MainController {
 	public String index() {
 		return "Hello, World!";
 	}
+	@GetMapping("/health")
+	public String health() {
+		return "OK";
+	}
 }
