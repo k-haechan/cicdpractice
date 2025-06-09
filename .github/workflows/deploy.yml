@@ -5,6 +5,7 @@ on:
       - src/**
       - build.gradle
       - settings.gradle
+      - .github/**
     branches:
       - main
 
@@ -22,3 +23,7 @@ jobs:
         run: echo $DOCKER_IMAGE_NAME
       - name: step2
         run: echo ${{ github.repository_owner }}
+      - name: step3
+        run: echo $OWNER
+      - name: step4
+        run: echo $github.event.repository.name
