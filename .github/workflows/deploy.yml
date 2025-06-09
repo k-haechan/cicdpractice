@@ -1,52 +1,53 @@
-name: deploy
+name: version-tagging
+
 on:
-  push:
-    paths:
-      - src/**
-      - build.gradle
-      - settings.gradle
-      - .github/**
-    branches:
-      - main
+  pull_request:
+    branches: [main]
+    types: [closed] # PR 머지될 때만 작동
 
 jobs:
-  makeTagAndRelease:
+  bump-version-and-tag:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    outputs:
-      tag_name: ${{ steps.create_tag.outputs.new_tag }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create Tag
-        id: create_tag
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.create_tag.outputs.new_tag }}
-          release_name: Release ${{ steps.create_tag.outputs.new_tag }}
-          body: ${{ steps.create_tag.outputs.changelog }}
-          draft: false
-          prerelease: false
 
-  buildImageAndPush: # 나눌까?
-    name: Build Image and Push
-    runs-on: ubuntu-latest
-    env:
-      DOCKER_IMAGE_NAME: cicd_practice
-    outputs:
-      DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME
-      OWNER: ${{ github.repository_owner }} # 이 부분 몰라.
     steps:
-      - name: step1
-        run: echo $DOCKER_IMAGE_NAME
-      - name: step2
-        run: echo ${{ github.repository_owner }}
-      - name: step3
-        run: echo ${{env.OWNER}}
-      - name: step4
-        run: echo $github.event.repository.name
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get current version tag
+        id: get_latest
+        run: |
+          git fetch --tags
+          TAG=$(git tag --sort=-v:refname | head -n 1)
+          echo "LATEST_TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Extract version components
+        id: split
+        run: |
+          VERSION=${{ env.LATEST_TAG }}
+          VERSION="${VERSION#v}" # remove 'v'
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          MINOR=$(echo $VERSION | cut -d. -f2)
+          PATCH=$(echo $VERSION | cut -d. -f3)
+
+          LABELS="${{ toJson(github.event.pull_request.labels) }}"
+          if [[ "$LABELS" == *"major"* ]]; then
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+          elif [[ "$LABELS" == *"minor"* ]]; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          elif [[ "$LABELS" == *"patch"* ]]; then
+            PATCH=$((PATCH + 1))
+          else
+            echo "❌ No version label found"; exit 1
+          fi
+
+          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create new tag and push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag ${{ env.NEW_TAG }}
+          git push origin ${{ env.NEW_TAG }}
