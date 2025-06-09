@@ -1,0 +1,24 @@
+name: deploy
+on:
+  push:
+    paths:
+      - src/**
+      - build.gradle
+      - settings.gradle
+    branches:
+      - main
+
+jobs:
+  buildImageAndPush: # 나눌까?
+    name: Build Image and Push
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_IMAGE_NAME: cicd_practice
+    outputs:
+      DOCKER_IMAGE_NAME: $DOCKER_IMAGE_NAME
+      OWNER: ${{ github.repository_owner }} # 이 부분 몰라.
+    steps:
+      - name: step1
+        run: echo $DOCKER_IMAGE_NAME
+      - name: step2
+        run: echo ${{ github.repository_owner }}
