@@ -17,4 +17,8 @@ public class MainController {
 	public String version() {
 		return "1.0.0";
 	}
+	@GetMapping("/status")
+	public String status() {
+		return "Service is running";
+	}
 }
