@@ -24,6 +24,6 @@ jobs:
       - name: step2
         run: echo ${{ github.repository_owner }}
       - name: step3
-        run: echo ${{OWNER}}
+        run: echo ${{env.OWNER}}
       - name: step4
         run: echo $github.event.repository.name
