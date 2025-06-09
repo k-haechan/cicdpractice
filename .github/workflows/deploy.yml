@@ -72,15 +72,15 @@ jobs:
           git push origin ${{ env.NEW_TAG }}
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2.2.2
         with:
           tag_name: ${{ env.NEW_TAG }}
-          release_name: Release ${{ env.NEW_TAG }}
+          name: Release ${{ env.NEW_TAG }}
           body: |
             🔖 PR: #${{ github.event.pull_request.number }}
             🔧 Author: @${{ github.event.pull_request.user.login }}
             📝 변경사항: ${{ github.event.pull_request.title }}
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
