@@ -149,7 +149,7 @@ jobs:
       - name: AWS 로그인 (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/dev-github-actions-role
           aws-region: ap-northeast-2
 
       - name: 여러 인스턴스 ID 가져오기
