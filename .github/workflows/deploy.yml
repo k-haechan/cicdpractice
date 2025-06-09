@@ -3,10 +3,10 @@ name: version-tagging
 on:
   pull_request:
     branches: [main]
-    types: [closed] # PR 머지될 때만 작동
+    types: [closed] # PR이 머지될 때 작동
 
 jobs:
-  bump-version-and-tag:
+  bump-version-and-release:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
@@ -14,15 +14,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get current version tag
+      - name: Get latest version tag
         id: get_latest
         run: |
           git fetch --tags
           TAG=$(git tag --sort=-v:refname | head -n 1)
           echo "LATEST_TAG=$TAG" >> $GITHUB_ENV
 
-      - name: Extract version components
-        id: split
+      - name: Extract version components and determine bump
+        id: split_and_bump
         run: |
           VERSION=${{ env.LATEST_TAG }}
           VERSION="${VERSION#v}" # remove 'v'
@@ -30,22 +30,41 @@ jobs:
           MINOR=$(echo $VERSION | cut -d. -f2)
           PATCH=$(echo $VERSION | cut -d. -f3)
 
-          LABELS="${{ toJson(github.event.pull_request.labels) }}"
-          if [[ "$LABELS" == *"major"* ]]; then
-            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
-          elif [[ "$LABELS" == *"minor"* ]]; then
-            MINOR=$((MINOR + 1)); PATCH=0
-          elif [[ "$LABELS" == *"patch"* ]]; then
-            PATCH=$((PATCH + 1))
-          else
-            echo "❌ No version label found"; exit 1
+          LABELS_JSON='${{ toJson(github.event.pull_request.labels) }}'
+          LABEL_NAMES=$(echo "$LABELS_JSON" | jq -r '.[].name')
+
+          VERSION_TYPE=""
+          for label in $LABEL_NAMES; do
+            if [[ "$label" == "major" ]]; then
+              VERSION_TYPE="major"
+            elif [[ "$label" == "minor" ]]; then
+              VERSION_TYPE="minor"
+            elif [[ "$label" == "patch" ]]; then
+              VERSION_TYPE="patch"
+            fi
+          done
+
+          if [[ -z "$VERSION_TYPE" ]]; then
+            echo "❌ No valid version label found"; exit 1
           fi
+
+          case $VERSION_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1)); PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
 
           NEW_TAG="v$MAJOR.$MINOR.$PATCH"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
 
-      - name: Create new tag and push
+      - name: Create and push Git tag
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
@@ -55,7 +74,7 @@ jobs:
       - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 자동 제공되는 기본 토큰
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.NEW_TAG }}
           release_name: Release ${{ env.NEW_TAG }}
