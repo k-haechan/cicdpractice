@@ -19,6 +19,6 @@ public class MainController {
 	}
 	@GetMapping("/status")
 	public String status() {
-		return "Service is running";
+		return "Service is runni";
 	}
 }
