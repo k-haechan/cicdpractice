@@ -158,6 +158,7 @@ jobs:
           INSTANCE_IDS=$(aws ec2 describe-instances \
             --filters "Name=tag:Role,Values=app-server" "Name=instance-state-name,Values=running" \
             --query "Reservations[].Instances[].InstanceId" --output text)
+          echo "INSTANCE_IDS=$INSTANCE_IDS"
           echo "INSTANCE_IDS=$INSTANCE_IDS" >> $GITHUB_ENV
 
       - name: 여러 인스턴스에 배포 명령 실행
