@@ -96,7 +96,7 @@ jobs:
     needs: bump-version-and-release
     runs-on: ubuntu-latest
     env:
-      DOCKER_IMAGE_NAME: app20250317
+      DOCKER_IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME }}
     outputs:
       DOCKER_IMAGE_NAME: ${{ env.DOCKER_IMAGE_NAME }}
       OWNER_LC: ${{ env.OWNER_LC }}
